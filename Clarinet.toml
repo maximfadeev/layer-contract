@@ -1,0 +1,10 @@
+[project]
+name = "layer-behemoth"
+requirements = []
+[contracts.main]
+path = "contracts/main.clar"
+depends_on = ["nft-trait"]
+
+[contracts.nft-trait]
+path = "contracts/nft-trait.clar"
+depends_on = []
