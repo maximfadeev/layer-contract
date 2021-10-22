@@ -200,17 +200,3 @@
 (define-read-only (get-token-uri (token-id uint))
   (ok (some (unwrap! (map-get? token-metadata { token-id: token-id }) (err u2222))))
 )
-
-
-;; (contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-single-token {price: u100, for-sale: true} "ipfs://abcalsjdhf" (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000} {address: 'STEB8ZW46YZJ40E3P7A287RBJFWPHYNQ2AB5ECT8, percentage: u2000})))
-;;::set_tx_sender ST2QXSK64YQX3CQPC530K79XWQ98XFAM9W3XKEH3N
-;; (contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main get-all-token-data u20008900017)
-;; (contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main purchase u20002100011)
-;; (contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main set-token-price-data u10000000001 u30000 true)
-
-;; (contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-single-token {price: u100000, for-sale: true} "ipfs://abcalsjdhf" (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000} {address: 'STEB8ZW46YZJ40E3P7A287RBJFWPHYNQ2AB5ECT8, percentage: u2000})))
-;; (contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-collection (some (list {data: {price: u100000, for-sale: true}, metadata: "ipfs://first"} {data: {price: u100, for-sale: true}, metadata: "ipfs://second"} {data: {price: u10000, for-sale: false}, metadata: "ipfs://third"})) none)
-;; (contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-to-collection u200021 {price: u500, for-sale: true} "ipfs://fourth" (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000} {address: 'STEB8ZW46YZJ40E3P7A287RBJFWPHYNQ2AB5ECT8, percentage: u2000})))
-;; (contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-to-collection u200001 {price: u500, for-sale: true} "ipfs://fourth" (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000} {address: 'STEB8ZW46YZJ40E3P7A287RBJFWPHYNQ2AB5ECT8, percentage: u2000})))
-
-;;(contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-collection none none)
