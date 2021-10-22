@@ -56,3 +56,30 @@ E.g `token-id: u20004800087` refers to the 87th file in the 48th collection.
 ```
 (contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-collection (some (list {data: {price: u100000, for-sale: true}, metadata: "ipfs://first"} {data: {price: u100, for-sale: true}, metadata: "ipfs://second"} {data: {price: u10000, for-sale: false}, metadata: "ipfs://third"})) (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000})))
 ```
+
+### mint to collection
+```
+(mint-to-collection (collection-id uint) (data {price: uint, for-sale: bool}) (metadata (string-ascii 256)) (royalties (optional (list 5 {address: principal, percentage: uint}))))
+```
+##### Parameters
+- collection-id: uint
+- data: tuple: {price: uint, for-sale: bool}
+- metadata: string-ascii 256
+- royalties: optional: list of tuples (max len 5): {address: principal, percentage: uint}
+##### Returns 
+- On success: `token-id`
+- On error: `error-id`
+
+##### Description
+Mints NFT and adds it to Collection. Only succeeds if invoked by the creator of Collection. 
+
+##### Sample clarinet calls
+- Mint NFT to collection with `collection-id: u200021`, without royalties:
+```
+(contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-to-collection u200021 {price: u500, for-sale: true} "ipfs://fourth" none)
+```
+- Mint NFT to collection with `collection-id: u200123`, with two royalties:
+```
+(contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-to-collection u200123 {price: u500, for-sale: true} "ipfs://fourth" (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000} {address: 'STEB8ZW46YZJ40E3P7A287RBJFWPHYNQ2AB5ECT8, percentage: u2000})))
+```
+
