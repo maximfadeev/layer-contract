@@ -1,4 +1,4 @@
-# Layer's NFT and Collections Contract
+# Layer's Single NFT and NFT Collections Contract
 
 ## Public Functions
 
