@@ -44,7 +44,7 @@ Creates a new Collection of NFTs. Automatically generates a `collection-id` defi
 Range of possible `collection-id`s is `u200001` to `u999999`.<br />
 Automatically generates `file-id`s for each file passed in defined as `1 + last-file-id`. <br />
 Range of possible `file-id`s is `u00001` to `u99999`.<br />
-Finally, for each file, a unique `token-id` is generated defined as `(collection-id * u100000) + file-id`.<br />
+Finally, for each file, a unique `token-id` is generated defined as `collection-id * u100000 + file-id`.<br />
 E.g `token-id: u20004800087` refers to the 87th file in the 48th collection.
 
 ##### Sample clarinet calls
