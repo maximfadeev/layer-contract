@@ -200,3 +200,4 @@
 (define-read-only (get-token-uri (token-id uint))
   (ok (some (unwrap! (map-get? token-metadata { token-id: token-id }) (err u2222))))
 )
+
