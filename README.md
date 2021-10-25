@@ -148,3 +148,40 @@ Allows owner of NFT to change price and toggle whether the NFT is available for 
 (contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main set-token-price-data u20002100003 u3000000 true)
 ```
 
+### transfer
+```
+(transfer (token-id uint) (owner principal) (recipient principal))
+```
+##### Parameters
+- token-id: uint
+- owner: principal
+- recipient: principal
+
+##### Returns 
+- On success: `true`
+- On error: `error-id`
+
+##### Description
+SIP-009 function. Allows owner of NFT to transfer ownership of NFT to another address. 
+
+##### Sample clarinet call
+- Trasnfer ownership of NFT with token id u20002100003 from 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA to 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE
+```
+(contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main transfer u20002100003 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE)
+```
+
+## Read Only Functions
+
+(get-all-token-data (token-id uint))
+
+(get-collection-data (collection-id uint))
+  
+(get-owner (token-id uint))
+
+(get-last-token-id)
+
+(get-token-uri (token-id uint))
+
+
+
+
