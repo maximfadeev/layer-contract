@@ -83,3 +83,24 @@ Mints NFT and adds it to Collection. Only succeeds if invoked by the creator of 
 (contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-to-collection u200123 {price: u500, for-sale: true} "ipfs://fourth" (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000} {address: 'STEB8ZW46YZJ40E3P7A287RBJFWPHYNQ2AB5ECT8, percentage: u2000})))
 ```
 
+### purchase
+```
+(purchase (token-id uint))
+```
+##### Parameters
+- token-id: uint
+- 
+##### Returns 
+- On success: `true`
+- On error: `error-id`
+
+##### Description
+Allows a user to purchase another user's NFT. Executes only if purchaser is not owner and if NFT is set as for sale. 
+
+##### Sample clarinet call
+- Purchase NFT with token ID u10000000123
+```
+(contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main purchase u10000000123)
+```
+
+
