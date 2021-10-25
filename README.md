@@ -89,7 +89,7 @@ Mints NFT and adds it to Collection. Only succeeds if invoked by the creator of 
 ```
 ##### Parameters
 - token-id: uint
-- 
+
 ##### Returns 
 - On success: `true`
 - On error: `error-id`
@@ -101,6 +101,29 @@ Allows a user to purchase another user's NFT. Executes only if purchaser is not 
 - Purchase NFT with token ID u10000000123
 ```
 (contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main purchase u10000000123)
+```
+
+### complete sale
+```
+(complete-sale (token-id uint) (new-owner-address principal) (old-owner-address principal) (token-price uint))
+```
+##### Parameters
+- token-id: uint
+- new-owner-address: principal
+- old-owner-address: principal
+- token-price: uint
+
+##### Returns 
+- On success: `true`
+- On error: `error-id`
+
+##### Description
+Admin only functionality that enables USD purchasing and auction flows. Allows admin to manually set sale price, old owner and new owner to distribute royalties, STX transfers and NFT transfer to the right users. Ownership of NFT must first be transferred to admin.
+
+##### Sample clarinet call
+- Complete sale for NFT with token-id u10000000001 with sale price of 2 STX
+```
+(contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main complete-sale u10000000001 'ST3DG3R65C9TTEEW5BC5XTSY0M1JM7NBE7GVWKTVJ 'STEB8ZW46YZJ40E3P7A287RBJFWPHYNQ2AB5ECT8 u2000000)
 ```
 
 
