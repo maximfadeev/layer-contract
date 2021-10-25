@@ -126,4 +126,25 @@ Admin only functionality that enables USD purchasing and auction flows. Allows a
 (contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main complete-sale u10000000001 'ST3DG3R65C9TTEEW5BC5XTSY0M1JM7NBE7GVWKTVJ 'STEB8ZW46YZJ40E3P7A287RBJFWPHYNQ2AB5ECT8 u2000000)
 ```
 
+### set token price data
+```
+(set-token-price-data (token-id uint) (price uint) (for-sale bool))
+```
+##### Parameters
+- token-id: uint
+- price: uint
+- for-sale: bool
+
+##### Returns 
+- On success: `true`
+- On error: `error-id`
+
+##### Description
+Allows owner of NFT to change price and toggle whether the NFT is available for purchase.
+
+##### Sample clarinet call
+- Set price of NFT with token-id u20002100003 to 3 STX and make NFT available for sale.
+```
+(contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main set-token-price-data u20002100003 u3000000 true)
+```
 
