@@ -1,6 +1,5 @@
 (impl-trait 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.nft-trait.nft-trait)
 (define-non-fungible-token Layer-NFT uint)
-(define-data-var last-id uint u10000000000)
 (define-data-var last-token-id uint u10000000000)
 (define-data-var last-collection-id uint u200000)
 (define-map token-data {token-id: uint} {price: uint, for-sale: bool})
@@ -11,18 +10,17 @@
 
 (define-private (mint-token (token-id uint) (data {price: uint, for-sale: bool}) (metadata (string-ascii 256)) (royalty-data {royalties: (list 6 {address: principal, percentage: uint}), owner-percentage: uint}))
   (match (nft-mint? Layer-NFT token-id tx-sender)
-    success (begin
-        (var-set last-id token-id)
-        (if 
-          (and
-            (map-insert token-data {token-id: token-id} data)
-            (map-insert token-metadata {token-id: token-id} metadata)
-            (map-insert token-royalties {token-id: token-id} royalty-data)
-          )
-          (ok token-id)
-          (err u102)
+    success 
+      (if 
+        (and
+          (map-insert token-data {token-id: token-id} data)
+          (map-insert token-metadata {token-id: token-id} metadata)
+          (map-insert token-royalties {token-id: token-id} royalty-data)
         )
+        (ok token-id)
+        (err u102)
       )
+      
     error (err u101)
   )
 )
@@ -92,7 +90,7 @@
 (define-private (calculate-royalty-data (royalties (optional (list 5 {address: principal, percentage: uint}))))
   (let
     (
-      (all-royalties (concat (list {address: (as-contract tx-sender), percentage: u800}) (default-to (list ) royalties)))
+      (all-royalties (concat (list {address: admin, percentage: u800}) (default-to (list ) royalties)))
       (total-royalties-percentage (fold calculate-total-royalties-percentage-helper all-royalties u0))
       (owner-percentage (- u10000 total-royalties-percentage))
     )
@@ -200,4 +198,3 @@
 (define-read-only (get-token-uri (token-id uint))
   (ok (some (unwrap! (map-get? token-metadata { token-id: token-id }) (err u2222))))
 )
-
