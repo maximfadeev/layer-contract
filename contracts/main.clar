@@ -2,6 +2,7 @@
 (define-non-fungible-token Layer-NFT uint)
 (define-data-var last-token-id uint u10000000000)
 (define-data-var last-collection-id uint u200000)
+(define-data-var admin-fee uint u800)
 (define-map token-data {token-id: uint} {price: uint, for-sale: bool})
 (define-map token-metadata {token-id: uint} (string-ascii 256))
 (define-map token-royalties {token-id: uint} {royalties: (list 6 {address: principal, percentage: uint}), owner-percentage: uint})
@@ -90,7 +91,7 @@
 (define-private (calculate-royalty-data (royalties (optional (list 5 {address: principal, percentage: uint}))))
   (let
     (
-      (all-royalties (concat (list {address: admin, percentage: u800}) (default-to (list ) royalties)))
+      (all-royalties (concat (list {address: admin, percentage: (var-get admin-fee)}) (default-to (list ) royalties)))
       (total-royalties-percentage (fold calculate-total-royalties-percentage-helper all-royalties u0))
       (owner-percentage (- u10000 total-royalties-percentage))
     )
@@ -160,6 +161,13 @@
   (if (is-eq (some tx-sender) (nft-get-owner? Layer-NFT token-id))
     (ok (map-set token-data {token-id: token-id} {price: price, for-sale: for-sale}))
     (err u13)
+  )
+)
+
+(define-public (set-admin-fee (fee uint))
+  (if (is-eq tx-sender admin)
+    (ok (var-set admin-fee fee))
+    (err u499)
   )
 )
 
