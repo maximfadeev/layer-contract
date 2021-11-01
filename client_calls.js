@@ -12,7 +12,7 @@ import { openContractCall } from "@stacks/connect";
 import { principalCV } from "@stacks/transactions/dist/clarity/types/principalCV";
 
 const CONTRACT_ADDRESS = "ST2124A54ZRRE8TCK86RYSSSNNX9QNQHFNA8SQH15";
-const CONTRACT_NAME = "fluttering-azure-perch";
+const CONTRACT_NAME = "integral-scarlet-viper";
 const NETWORK = new StacksTestnet();
 const appConfig = new AppConfig(["store_write", "publish_data"]);
 export const userSession = new UserSession({ appConfig });
