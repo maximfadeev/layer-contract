@@ -47,8 +47,7 @@ Note: minimum token price is u10000
 
 ##### Parameters
 
-- files: optional: list of tuples (max len 100): {metadata: (string-ascii 256), data: {price: uint, for-sale: bool}}
-- royalties: optional: list of tuples (max len 5): {address: principal, percentage: uint}
+- files: optional: list of tuples (max len 100): {metadata: (string-ascii 256), data: {price: uint, for-sale: bool}, royalties: optional: list of tuples (max len 5): {address: principal, percentage: uint}}
 
 ##### Returns
 
@@ -67,16 +66,16 @@ Note: minimum token price is u10000
 
 ##### Sample clarinet calls
 
-- Initialize empty collection with no royalties:
+- Initialize empty collection
 
 ```
-(contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-collection none none)
+(contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-collection none)
 ```
 
-- Collection with 3 files and 1 royalty:
+- Collection with 3 files:
 
 ```
-(contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-collection (some (list {data: {price: u100000, for-sale: true}, metadata: "ipfs://first"} {data: {price: u100, for-sale: true}, metadata: "ipfs://second"} {data: {price: u10000, for-sale: false}, metadata: "ipfs://third"})) (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000})))
+(contract-call? .main mint-collection (some (list {data: {price: u100000, for-sale: true}, metadata: "ipfs://first", royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000}))} {data: {price: u100, for-sale: true}, metadata: "ipfs://second", royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u2000}))} {data: {price: u10000, for-sale: false}, metadata: "ipfs://third", royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u3000}))})))
 ```
 
 ### mint to collection

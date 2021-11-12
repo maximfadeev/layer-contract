@@ -42,25 +42,25 @@
   )
 )
 
-(define-public (mint-collection (files (optional (list 100 {metadata: (string-ascii 256), data: {price: uint, for-sale: bool}}))) (royalties (optional (list 5 {address: principal, percentage: uint}))))
+(define-public (mint-collection (files (optional (list 100 {metadata: (string-ascii 256), data: {price: uint, for-sale: bool}, royalties: (optional (list 5 {address: principal, percentage: uint}))}))))
   (let
     (
-      (royalty-data (unwrap! (calculate-royalty-data royalties) (err u104)))
       (collection-id (+ u1 (var-get last-collection-id)))
       (first-token-id (* collection-id u100000))
+      (last-file-id (fold mint-collection-nft-helper (default-to (list ) files) first-token-id))
     )
     (begin 
-      (map-set collection-data {collection-id: collection-id} {last-file-id: (get token-id (fold mint-collection-nft-helper (default-to (list ) files) {royalty-data: royalty-data, token-id: first-token-id})), owner: tx-sender})
+      (map-set collection-data {collection-id: collection-id} {last-file-id: last-file-id, owner: tx-sender})
       (var-set last-collection-id collection-id)
       (ok collection-id)
     )
   )
 )
 
-(define-private (mint-collection-nft-helper (file {metadata: (string-ascii 256), data: {price: uint, for-sale: bool}}) (persistent-data {royalty-data: {royalties: (list 6 {address: principal, percentage: uint}), owner-percentage: uint}, token-id: uint}))
-  (if (is-ok (mint-token (+ u1 (get token-id persistent-data)) (get data file) (get metadata file) (get royalty-data persistent-data)))
-    (merge persistent-data {token-id: (+ u1 (get token-id persistent-data))})
-    persistent-data
+(define-private (mint-collection-nft-helper (file {metadata: (string-ascii 256), data: {price: uint, for-sale: bool}, royalties: (optional (list 5 {address: principal, percentage: uint}))}) (token-id uint)) 
+  (if (is-ok (mint-token (+ u1 token-id) (get data file) (get metadata file) (unwrap! (calculate-royalty-data (get royalties file)) u1)))
+    (+ u1 token-id)
+    token-id
   )
 )
 
@@ -171,6 +171,8 @@
   )
 )
 
+(define-public (validate-auth (challenge-token (string-ascii 400))) (ok true))
+
 (define-public (transfer (token-id uint) (owner principal) (recipient principal))
   (if
     (and 
@@ -206,3 +208,7 @@
 (define-read-only (get-token-uri (token-id uint))
   (ok (some (unwrap! (map-get? token-metadata { token-id: token-id }) (err u2222))))
 )
+
+
+
+(contract-call? .main mint-collection (some (list {data: {price: u100000, for-sale: true}, metadata: "ipfs://first", royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000}))} {data: {price: u100, for-sale: true}, metadata: "ipfs://second", royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u2000}))} {data: {price: u10000, for-sale: false}, metadata: "ipfs://third", royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u3000}))})))

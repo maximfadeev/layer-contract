@@ -11,8 +11,8 @@ import { StacksTestnet } from "@stacks/network";
 import { openContractCall } from "@stacks/connect";
 import { principalCV } from "@stacks/transactions/dist/clarity/types/principalCV";
 
-const CONTRACT_ADDRESS = "ST2124A54ZRRE8TCK86RYSSSNNX9QNQHFNA8SQH15";
-const CONTRACT_NAME = "integral-scarlet-viper";
+const CONTRACT_ADDRESS = "ST248HH800501WYSG7Z2SS1ZWHQW1GGH85Q6YJBCC";
+const CONTRACT_NAME = "entire-copper-lynx";
 const NETWORK = new StacksTestnet();
 const appConfig = new AppConfig(["store_write", "publish_data"]);
 export const userSession = new UserSession({ appConfig });
@@ -87,22 +87,29 @@ export async function mint_collection() {
   const files = someCV(
     listCV([
       tupleCV({
-        metadata: stringAsciiCV("ipfs://laskdyoq3u4y5rlskjefql4yulkjq4h58sdf8lkjhansdf"),
+        metadata: stringAsciiCV("ipfs://first"),
         data: tupleCV(data),
+        royalties: royaltiesThree,
       }),
       tupleCV({
-        metadata: stringAsciiCV("ipfs://laskdyoq3u4y5rlskjefql4yulkjq4h58sdf8lkjhansdf"),
+        metadata: stringAsciiCV("ipfs://second"),
         data: tupleCV(data),
+        royalties: royaltiesFive,
       }),
       tupleCV({
-        metadata: stringAsciiCV("ipfs://laskdyoq3u4y5rlskjefql4yulkjq4h58sdf8lkjhansdf"),
+        metadata: stringAsciiCV("ipfs://third"),
         data: tupleCV(data),
+        royalties: noneCV(),
+      }),
+      tupleCV({
+        metadata: stringAsciiCV("ipfs://fourth"),
+        data: tupleCV(data),
+        royalties: royaltiesOne,
       }),
     ])
   ),
-
-  const functionArgs = [files, royaltiesOne];
-  // no files, no royalties: [noneCV(), noneCV()]
+  
+  const functionArgs = [files];
 
   const options = {
     contractAddress: CONTRACT_ADDRESS,
@@ -111,7 +118,7 @@ export async function mint_collection() {
     network,
     functionArgs,
     postConditions: [],
-    postConditionMode: PostConditionMode.Allow,
+    postConditionMode: PostConditionMode.Deny,
     appDetails: APP_DETAILS,
   }
   await openContractCall(options);
@@ -139,7 +146,7 @@ export async function mint_to_collection(collectionID) {
     network,
     functionArgs,
     postConditions: [],
-    postConditionMode: PostConditionMode.Allow,
+    postConditionMode: PostConditionMode.Deny,
     appDetails: APP_DETAILS,
   };
   await openContractCall(options);
@@ -149,14 +156,36 @@ export async function mint_to_collection(collectionID) {
 export async function purchase(tokenID) {
   let functionArgs = [uintCV(tokenID)];
 
+  const postConditionAddress = userSession.loadUserData().profile.stxAddress.testnet;
+  const postConditionCode = FungibleConditionCode.Equal;
+  const tokenData = await getAllTokenData(tokenID);
+  const tokenPrice = new BigNum(tokenData.data.price.value);
+
+  const standardSTXPostCondition = makeStandardSTXPostCondition(
+    postConditionAddress,
+    postConditionCode,
+    tokenPrice
+  );
+
+  const postConditionCodeNFT = NonFungibleConditionCode.DoesNotOwn;
+  const assetName = "Layer-NFT";
+  const nonFungibleAssetInfo = createAssetInfo(CONTRACT_ADDRESS, CONTRACT_NAME, assetName);
+
+  const standardNonFungiblePostCondition = makeStandardNonFungiblePostCondition(
+    tokenData.owner,
+    postConditionCodeNFT,
+    nonFungibleAssetInfo,
+    uintCV(tokenID)
+  );
+
   const options = {
     contractAddress: CONTRACT_ADDRESS,
     contractName: CONTRACT_NAME,
     functionName: "purchase",
     network,
     functionArgs,
-    postConditions: [],
-    postConditionMode: PostConditionMode.Allow,
+    postConditions: [standardSTXPostCondition, standardNonFungiblePostCondition],
+    postConditionMode: PostConditionMode.Deny,
     appDetails: APP_DETAILS,
   };
   await openContractCall(options);
@@ -164,6 +193,18 @@ export async function purchase(tokenID) {
 
 // transfers NFT from owner to recipient with no transfer of STX
 export async function transfer(tokenID, owner, recipient) {
+  const postConditionCodeNFT = NonFungibleConditionCode.DoesNotOwn;
+  const assetName = "Layer-NFT";
+  const nonFungibleAssetInfo = createAssetInfo(CONTRACT_ADDRESS, CONTRACT_NAME, assetName);
+
+  const standardNonFungiblePostCondition = makeStandardNonFungiblePostCondition(
+    owner,
+    postConditionCodeNFT,
+    nonFungibleAssetInfo,
+    uintCV(tokenID)
+  );
+
+
   const options = {
     functionName: "transfer",
     functionArgs: [uintCV(tokenID), standardPrincipalCV(owner), standardPrincipalCV(recipient)],
@@ -171,8 +212,8 @@ export async function transfer(tokenID, owner, recipient) {
     contractName: CONTRACT_NAME,
     appDetails: APP_DETAILS,
     network: NETWORK,
-    postConditionMode: PostConditionMode.Allow,
-    postConditions: [],
+    postConditionMode: PostConditionMode.Deny,
+    postConditions: [standardNonFungiblePostCondition],
   };
   await openContractCall(options);
 }
@@ -186,7 +227,7 @@ export async function set_price_data(tokenID, price, isForSale) {
     contractName: CONTRACT_NAME,
     network: NETWORK,
     appDetails: APP_DETAILS,
-    postConditionMode: PostConditionMode.Allow,
+    postConditionMode: PostConditionMode.Deny,
     postConditions: [],
   };
   await openContractCall(options);
