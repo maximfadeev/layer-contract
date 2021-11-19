@@ -12,7 +12,7 @@ import { openContractCall } from "@stacks/connect";
 import { principalCV } from "@stacks/transactions/dist/clarity/types/principalCV";
 
 const CONTRACT_ADDRESS = "ST248HH800501WYSG7Z2SS1ZWHQW1GGH85Q6YJBCC";
-const CONTRACT_NAME = "entire-copper-lynx";
+const CONTRACT_NAME = "dull-plum-oxen";
 const NETWORK = new StacksTestnet();
 const appConfig = new AppConfig(["store_write", "publish_data"]);
 export const userSession = new UserSession({ appConfig });
