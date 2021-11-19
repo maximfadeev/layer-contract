@@ -130,13 +130,20 @@ export async function mint_to_collection(collectionID) {
   data["price"] = uintCV(4 * 1000000);
   data["for-sale"] = trueCV();
 
-  const metadata = stringAsciiCV("ipfs://sample_ipfs_string");
-
   let functionArgs = [
     uintCV(collectionID),
-    tupleCV(data),
-    metadata,
-    royaltiesFive,
+    listCV([
+      tupleCV({
+        data: tupleCV(data),
+        metadata: stringAsciiCV("ipfs://laskdyoq3u4y5rlskjefql4yulkjq4h58sdf8lkjhansdf"),
+        royalties: royaltiesOne,
+      }),
+      tupleCV({
+        data: tupleCV(data),
+        metadata: stringAsciiCV("ipfs://laskdyoq3u4y5rlskjefql4yulkjq4h58sdf8lkjhansdf"),
+        royalties: royaltiesOne,
+      }),
+    ]),
   ];
 
   const options = {

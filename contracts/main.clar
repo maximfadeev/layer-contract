@@ -2,12 +2,12 @@
 (define-non-fungible-token Layer-NFT uint)
 (define-data-var last-token-id uint u10000000000)
 (define-data-var last-collection-id uint u200000)
-(define-data-var admin-fee uint u800)
+(define-data-var admin-fee uint u1000)
 (define-map token-data {token-id: uint} {price: uint, for-sale: bool})
 (define-map token-metadata {token-id: uint} (string-ascii 256))
 (define-map token-royalties {token-id: uint} {royalties: (list 6 {address: principal, percentage: uint}), owner-percentage: uint})
 (define-map collection-data {collection-id: uint} {last-file-id: uint, owner: principal})
-(define-constant admin 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE)
+(define-data-var admin principal 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE)
 
 (define-private (mint-token (token-id uint) (data {price: uint, for-sale: bool}) (metadata (string-ascii 256)) (royalty-data {royalties: (list 6 {address: principal, percentage: uint}), owner-percentage: uint}))
   (match (nft-mint? Layer-NFT token-id tx-sender)
@@ -64,21 +64,20 @@
   )
 )
 
-(define-public (mint-to-collection (collection-id uint) (data {price: uint, for-sale: bool}) (metadata (string-ascii 256)) (royalties (optional (list 5 {address: principal, percentage: uint}))))
+(define-public (mint-to-collection (collection-id uint) (files (list 100 {metadata: (string-ascii 256), data: {price: uint, for-sale: bool}, royalties: (optional (list 5 {address: principal, percentage: uint}))})))
   (let
     (
       (collection-info (unwrap! (map-get? collection-data {collection-id: collection-id}) (err u431)))
-      (token-id (+ u1 (get last-file-id collection-info)))
+      (token-id (get last-file-id collection-info))
       (collection-owner (get owner collection-info))
-      (royalty-data (unwrap! (calculate-royalty-data royalties) (err u104)))
+      (last-file-id (fold mint-collection-nft-helper files token-id))
     )
     (if 
       (and
         (is-eq tx-sender collection-owner)
-        (is-ok (mint-token token-id data metadata royalty-data))
-        (map-set collection-data {collection-id: collection-id} {owner: collection-owner, last-file-id: token-id})
+        (map-set collection-data {collection-id: collection-id} {owner: collection-owner, last-file-id: last-file-id})
       )
-      (ok token-id)
+      (ok last-file-id)
       (err u334)
     )
   )
@@ -91,7 +90,7 @@
 (define-private (calculate-royalty-data (royalties (optional (list 5 {address: principal, percentage: uint}))))
   (let
     (
-      (all-royalties (concat (list {address: admin, percentage: (var-get admin-fee)}) (default-to (list ) royalties)))
+      (all-royalties (concat (list {address: (var-get admin), percentage: (var-get admin-fee)}) (default-to (list ) royalties)))
       (total-royalties-percentage (fold calculate-total-royalties-percentage-helper all-royalties u0))
       (owner-percentage (- u10000 total-royalties-percentage))
     )
@@ -149,7 +148,7 @@
 (define-public (complete-sale (token-id uint) (new-owner-address principal) (old-owner-address principal) (token-price uint))
   (if 
     (and
-      (is-eq tx-sender admin)
+      (is-eq tx-sender (var-get admin))
       (is-ok (pay token-id token-price old-owner-address))
     )
     (nft-transfer? Layer-NFT token-id tx-sender new-owner-address) 
@@ -164,14 +163,34 @@
   )
 )
 
+(define-public (change-collection-owner (collection-id uint) (new-owner principal))
+  (let 
+    (
+      (collection-info (unwrap! (map-get? collection-data {collection-id: collection-id}) (err u325)))
+    )
+    (if (is-eq (get owner collection-info) tx-sender)
+      (ok (map-set collection-data {collection-id: collection-id} {owner: new-owner, last-file-id: (get last-file-id collection-info)}))
+      (err u677)
+    )
+  )
+)
+
 (define-public (set-admin-fee (fee uint))
-  (if (is-eq tx-sender admin)
+  (if (is-eq tx-sender (var-get admin))
     (ok (var-set admin-fee fee))
     (err u499)
   )
 )
 
-(define-public (validate-auth (challenge-token (string-ascii 400))) (ok true))
+(define-public (change-admin (new-admin principal))
+  (if (is-eq (var-get admin) tx-sender)
+    (ok (var-set admin new-admin))
+    (err u221)
+  )
+
+)
+
+(define-public (validate-auth (challenge-token (string-ascii 500))) (ok true))
 
 (define-public (transfer (token-id uint) (owner principal) (recipient principal))
   (if
@@ -208,7 +227,3 @@
 (define-read-only (get-token-uri (token-id uint))
   (ok (some (unwrap! (map-get? token-metadata { token-id: token-id }) (err u2222))))
 )
-
-
-
-(contract-call? .main mint-collection (some (list {data: {price: u100000, for-sale: true}, metadata: "ipfs://first", royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000}))} {data: {price: u100, for-sale: true}, metadata: "ipfs://second", royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u2000}))} {data: {price: u10000, for-sale: false}, metadata: "ipfs://third", royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u3000}))})))
