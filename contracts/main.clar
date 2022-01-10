@@ -20,8 +20,7 @@
         )
         (ok token-id)
         (err u102)
-      )
-      
+      )  
     error (err u101)
   )
 )
@@ -122,7 +121,7 @@
   )
 )
 
-(define-private (pay (token-id uint) (price uint) (owner-address principal))
+(define-public (pay (token-id uint) (price uint) (owner-address principal))
   (let
     (
       (royalties-data (unwrap! (map-get? token-royalties {token-id: token-id}) (err u190)))
@@ -164,10 +163,7 @@
 )
 
 (define-public (change-collection-owner (collection-id uint) (new-owner principal))
-  (let 
-    (
-      (collection-info (unwrap! (map-get? collection-data {collection-id: collection-id}) (err u325)))
-    )
+  (let ((collection-info (unwrap! (map-get? collection-data {collection-id: collection-id}) (err u325))))
     (if (is-eq (get owner collection-info) tx-sender)
       (ok (map-set collection-data {collection-id: collection-id} {owner: new-owner, last-file-id: (get last-file-id collection-info)}))
       (err u677)
@@ -187,7 +183,6 @@
     (ok (var-set admin new-admin))
     (err u221)
   )
-
 )
 
 (define-public (validate-auth (challenge-token (string-ascii 500))) (ok true))
@@ -197,22 +192,21 @@
     (and 
       (is-eq (some tx-sender) (nft-get-owner? Layer-NFT token-id))
       (is-eq owner tx-sender)
+      (is-ok (nft-transfer? Layer-NFT token-id owner recipient))
     )
-    (nft-transfer? Layer-NFT token-id owner recipient)
+    (ok (map-set token-data {token-id: token-id} (merge (unwrap! (map-get? token-data {token-id: token-id}) (err u1903)) {for-sale: false})))
     (err u37)
   )
 )
 
 (define-read-only (get-all-token-data (token-id uint))
-  (ok
-    {
+  (ok {
       token-id: token-id,
       token-metadata: (unwrap! (map-get? token-metadata {token-id: token-id}) (err u3)),
-      token-data: (unwrap! (map-get? token-data {token-id: token-id}) (err u3)),
+      token-data: (unwrap! (map-get? token-data {token-id: token-id}) (err u8)),
       token-royalties: (unwrap! (map-get? token-royalties {token-id: token-id}) (err u4)),
       token-owner: (unwrap! (nft-get-owner? Layer-NFT token-id) (err u5)),
-    }
-  )
+    })
 )
 
 (define-read-only (get-collection-data (collection-id uint))

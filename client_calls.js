@@ -161,8 +161,6 @@ export async function mint_to_collection(collectionID) {
 
 // Purchase
 export async function purchase(tokenID) {
-  let functionArgs = [uintCV(tokenID)];
-
   const postConditionAddress = userSession.loadUserData().profile.stxAddress.testnet;
   const postConditionCode = FungibleConditionCode.Equal;
   const tokenData = await getAllTokenData(tokenID);
@@ -190,7 +188,7 @@ export async function purchase(tokenID) {
     contractName: CONTRACT_NAME,
     functionName: "purchase",
     network,
-    functionArgs,
+    functionArgs: [uintCV(tokenID)],
     postConditions: [standardSTXPostCondition, standardNonFungiblePostCondition],
     postConditionMode: PostConditionMode.Deny,
     appDetails: APP_DETAILS,
