@@ -75,7 +75,7 @@ Note: minimum token price is u10000
 - Collection with 3 files:
 
 ```
-(contract-call? .main mint-collection (some (list {data: {price: u100000, for-sale: true}, metadata: "ipfs://first", royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000}))} {data: {price: u100, for-sale: true}, metadata: "ipfs://second", royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u2000}))} {data: {price: u10000, for-sale: false}, metadata: "ipfs://third", royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u3000}))})))
+(contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-collection (some (list {data: {price: u100000, for-sale: true}, metadata: "ipfs://first", royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000}))} {data: {price: u100, for-sale: true}, metadata: "ipfs://second", royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u2000}))} {data: {price: u10000, for-sale: false}, metadata: "ipfs://third", royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u3000}))})))
 ```
 
 ### mint to collection
@@ -109,10 +109,10 @@ Note: minimum token price is u10000
 (contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-to-collection u200021 {price: u500, for-sale: true} "ipfs://fourth" none)
 ```
 
-- Mint NFT to collection with `collection-id: u200123`, with two royalties:
+- Mint two NFTs to collection with `collection-id: u200123`, with two royalties:
 
 ```
-(contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-to-collection u200123 {price: u500, for-sale: true} "ipfs://fourth" (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000} {address: 'STEB8ZW46YZJ40E3P7A287RBJFWPHYNQ2AB5ECT8, percentage: u2000})))
+(contract-call? 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE.main mint-to-collection u200021 (list { metadata: "ipfs://fourth", data: { price: u500, for-sale: true }, royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000} {address: 'STEB8ZW46YZJ40E3P7A287RBJFWPHYNQ2AB5ECT8, percentage: u2000})) } { metadata: "ipfs://fourth", data: { price: u500, for-sale: true }, royalties: (some (list {address: 'STFCVYY1RJDNJHST7RRTPACYHVJQDJ7R1DWTQHQA, percentage: u1000} {address: 'STEB8ZW46YZJ40E3P7A287RBJFWPHYNQ2AB5ECT8, percentage: u2000})) } ))
 ```
 
 ### purchase

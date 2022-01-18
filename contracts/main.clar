@@ -9,35 +9,49 @@
 (define-map collection-data {collection-id: uint} {last-file-id: uint, owner: principal})
 (define-data-var admin principal 'ST1HTBVD3JG9C05J7HBJTHGR0GGW7KXW28M5JS8QE)
 
+;; ERROR CODES
+(define-constant ERR-INSUFFICIENT-STX (err u975))
+(define-constant ERR-TOKEN-NOT-FOR-SALE (err u976))
+(define-constant ERR-ROYALTIES-TOTAL-OVERFLOW (err u977))
+(define-constant ERR-NOT-AUTHORIZED (err u978))
+(define-constant ERR-COULD-NOT-CALCULATE-ROYALTY-DATA (err u979))
+(define-constant ERR-FAILED-TO-MINT-TO-COLLECTION (err u980))
+(define-constant ERR-COLLECTION-DOES-NOT-EXIST (err u981))
+(define-constant ERR-FAILED-TO-CALCULATE-ROYALTIES (err u982))
+(define-constant ERR-PURCHASE-FAILED (err u983))
+(define-constant ERR-PURCHASE-NFT-TRANSFER-FAILED (err u984))
+(define-constant ERR-TOKEN-OWNER-FAILED-TO-UNWRWAP (err u985))
+(define-constant ERR-DATA-FAILED-TO-UNWRAP (err u986))
+(define-constant ERR-PAY-ROYALTIES-DATA-FAILED (err u987))
+(define-constant ERR-NO-PRICE-RES (err u989))
+(define-constant ERR-FAILED-TO-GET-COLLECTION-INFO (err u992))
+(define-constant ERR-FAILED-TO-TRANSFER-TOKEN (err u994))
+(define-constant ERR-FAILED-TO-SET-TOKEN-DATA (err u995))
+(define-constant ERR-TOKEN-METADATA-NOT-SET (err u996))
+(define-constant ERR-TOKEN-ID-NOT-SET (err u997))
+(define-constant ERR-ROYALTIES-NOT-SET (err u998))
+(define-constant ERR-GETTING-NFT-OWNER (err u999))
+(define-constant ERR-COULD-NOT-GET-TOKEN-URI (err u1000))
+
 (define-private (mint-token (token-id uint) (data {price: uint, for-sale: bool}) (metadata (string-ascii 256)) (royalty-data {royalties: (list 6 {address: principal, percentage: uint}), owner-percentage: uint}))
-  (match (nft-mint? Layer-NFT token-id tx-sender)
-    success 
-      (if 
-        (and
-          (map-insert token-data {token-id: token-id} data)
-          (map-insert token-metadata {token-id: token-id} metadata)
-          (map-insert token-royalties {token-id: token-id} royalty-data)
-        )
-        (ok token-id)
-        (err u102)
-      )  
-    error (err u101)
+  (begin 
+    (try! (nft-mint? Layer-NFT token-id tx-sender))
+    (map-insert token-data {token-id: token-id} data)
+    (map-insert token-metadata {token-id: token-id} metadata)
+    (map-insert token-royalties {token-id: token-id} royalty-data)
+    (ok token-id)
   )
 )
 
 (define-public (mint-single-token (data {price: uint, for-sale: bool}) (metadata (string-ascii 256)) (royalties (optional (list 5 {address: principal, percentage: uint}))))
   (let
     (
-      (royalty-data (unwrap! (calculate-royalty-data royalties) (err u104)))
+      (royalty-data (unwrap! (calculate-royalty-data royalties) ERR-COULD-NOT-CALCULATE-ROYALTY-DATA))
       (token-id (+ u1 (var-get last-token-id)))
     )
-    (match (mint-token token-id data metadata royalty-data)
-      success (begin
-        (var-set last-token-id token-id)
-        (ok token-id)
-      )
-      error (err error)
-    )
+    (try! (mint-token token-id data metadata royalty-data))
+    (var-set last-token-id token-id)
+    (ok token-id)
   )
 )
 
@@ -48,11 +62,9 @@
       (first-token-id (* collection-id u100000))
       (last-file-id (fold mint-collection-nft-helper (default-to (list ) files) first-token-id))
     )
-    (begin 
-      (map-set collection-data {collection-id: collection-id} {last-file-id: last-file-id, owner: tx-sender})
-      (var-set last-collection-id collection-id)
-      (ok collection-id)
-    )
+    (map-set collection-data {collection-id: collection-id} {last-file-id: last-file-id, owner: tx-sender})
+    (var-set last-collection-id collection-id)
+    (ok collection-id)
   )
 )
 
@@ -66,19 +78,14 @@
 (define-public (mint-to-collection (collection-id uint) (files (list 100 {metadata: (string-ascii 256), data: {price: uint, for-sale: bool}, royalties: (optional (list 5 {address: principal, percentage: uint}))})))
   (let
     (
-      (collection-info (unwrap! (map-get? collection-data {collection-id: collection-id}) (err u431)))
+      (collection-info (unwrap! (map-get? collection-data {collection-id: collection-id}) ERR-COLLECTION-DOES-NOT-EXIST))
       (token-id (get last-file-id collection-info))
       (collection-owner (get owner collection-info))
       (last-file-id (fold mint-collection-nft-helper files token-id))
     )
-    (if 
-      (and
-        (is-eq tx-sender collection-owner)
-        (map-set collection-data {collection-id: collection-id} {owner: collection-owner, last-file-id: last-file-id})
-      )
-      (ok last-file-id)
-      (err u334)
-    )
+    (asserts! (is-eq tx-sender collection-owner) ERR-NOT-AUTHORIZED)
+    (map-set collection-data {collection-id: collection-id} {owner: collection-owner, last-file-id: last-file-id})
+    (ok last-file-id)
   )
 )
 
@@ -93,119 +100,102 @@
       (total-royalties-percentage (fold calculate-total-royalties-percentage-helper all-royalties u0))
       (owner-percentage (- u10000 total-royalties-percentage))
     )
-    (if (<= total-royalties-percentage u10000)
-      (ok {royalties: all-royalties, owner-percentage: owner-percentage})
-      (err u103)
-    )
+    (asserts! (<= total-royalties-percentage u10000) ERR-ROYALTIES-TOTAL-OVERFLOW)
+    (ok {royalties: all-royalties, owner-percentage: owner-percentage})
   )
 )
 
 (define-public (purchase (token-id uint))
   (let 
     (
-      (data (unwrap! (map-get? token-data { token-id: token-id }) (err u1001)))
+      (data (unwrap! (map-get? token-data { token-id: token-id }) ERR-DATA-FAILED-TO-UNWRAP))
       (is-token-for-sale (get for-sale data))
       (token-price (get price data))
-      (token-owner (unwrap! (nft-get-owner? Layer-NFT token-id) (err u16)))
+      (token-owner (unwrap! (nft-get-owner? Layer-NFT token-id) ERR-TOKEN-OWNER-FAILED-TO-UNWRWAP))
     )
-    (if 
-      (and
-        is-token-for-sale
-        (>= (stx-get-balance tx-sender) token-price)
-        (is-ok (pay token-id token-price token-owner))
-        (unwrap! (nft-transfer? Layer-NFT token-id token-owner tx-sender) (err u18))
-      )
-      (ok (map-set token-data { token-id: token-id } {for-sale: false, price: token-price}))
-      (err u19)
-    )
+    (asserts! is-token-for-sale ERR-TOKEN-NOT-FOR-SALE)
+    (asserts! (>= (stx-get-balance tx-sender) token-price) ERR-INSUFFICIENT-STX)
+    (try! (pay token-id token-price token-owner))
+    (try! (nft-transfer? Layer-NFT token-id token-owner tx-sender))
+    (ok (map-set token-data { token-id: token-id } {for-sale: false, price: token-price}))
   )
 )
 
 (define-public (pay (token-id uint) (price uint) (owner-address principal))
   (let
     (
-      (royalties-data (unwrap! (map-get? token-royalties {token-id: token-id}) (err u190)))
+      (royalties-data (unwrap! (map-get? token-royalties {token-id: token-id}) ERR-PAY-ROYALTIES-DATA-FAILED))
       (royalties (get royalties royalties-data))
       (owner-percentage (get owner-percentage royalties-data))
+      (royalties-with-owner-share (append royalties {percentage: owner-percentage, address: owner-address}))
     )
-    (fold pay-percentage (append royalties {percentage: owner-percentage, address: owner-address}) (ok price))
+    (fold pay-percentage royalties-with-owner-share (ok price))
   )
 )
 
 (define-private (pay-percentage (royalty {percentage: uint, address: principal}) (price-res (response uint uint)))
-  (let ((price (unwrap! price-res (err u1234))))
-    (if (not (is-eq tx-sender (get address royalty)))
-      (if (is-ok (stx-transfer? (/ (* price (get percentage royalty)) u10000) tx-sender (get address royalty)))
-        (ok price)
-        (err u1023)
-      )
-      (ok price) 
+  (let 
+    (
+      (price (unwrap! price-res ERR-NO-PRICE-RES))
+      (stx-to-pay (/ (* price (get percentage royalty)) u10000))
     )
+    (try! (stx-transfer? stx-to-pay tx-sender (get address royalty)))
+    (ok price)
   )
 )
 
 (define-public (complete-sale (token-id uint) (new-owner-address principal) (old-owner-address principal) (token-price uint))
-  (if 
-    (and
-      (is-eq tx-sender (var-get admin))
-      (is-ok (pay token-id token-price old-owner-address))
-    )
-    (nft-transfer? Layer-NFT token-id tx-sender new-owner-address) 
-    (err u561)
+  (begin 
+    (asserts! (is-eq tx-sender (var-get admin)) ERR-NOT-AUTHORIZED)
+    (ok (try! (nft-transfer? Layer-NFT token-id old-owner-address new-owner-address)))
   )
 )
 
 (define-public (set-token-price-data (token-id uint) (price uint) (for-sale bool))
-  (if (is-eq (some tx-sender) (nft-get-owner? Layer-NFT token-id))
+  (begin 
+    (asserts! (is-eq (some tx-sender) (nft-get-owner? Layer-NFT token-id)) ERR-NOT-AUTHORIZED)
     (ok (map-set token-data {token-id: token-id} {price: price, for-sale: for-sale}))
-    (err u13)
   )
 )
 
 (define-public (change-collection-owner (collection-id uint) (new-owner principal))
-  (let ((collection-info (unwrap! (map-get? collection-data {collection-id: collection-id}) (err u325))))
-    (if (is-eq (get owner collection-info) tx-sender)
-      (ok (map-set collection-data {collection-id: collection-id} {owner: new-owner, last-file-id: (get last-file-id collection-info)}))
-      (err u677)
-    )
+  (let ((collection-info (unwrap! (map-get? collection-data {collection-id: collection-id}) ERR-FAILED-TO-GET-COLLECTION-INFO)))
+    (asserts! (is-eq tx-sender (get owner collection-info)) ERR-NOT-AUTHORIZED)
+    (ok (map-set collection-data {collection-id: collection-id} {owner: new-owner, last-file-id: (get last-file-id collection-info)}))
   )
 )
 
 (define-public (set-admin-fee (fee uint))
-  (if (is-eq tx-sender (var-get admin))
+  (begin 
+    (asserts! (is-eq tx-sender (var-get admin)) ERR-NOT-AUTHORIZED)
     (ok (var-set admin-fee fee))
-    (err u499)
   )
 )
 
 (define-public (change-admin (new-admin principal))
-  (if (is-eq (var-get admin) tx-sender)
+  (begin 
+    (asserts! (is-eq tx-sender (var-get admin)) ERR-NOT-AUTHORIZED)
     (ok (var-set admin new-admin))
-    (err u221)
   )
 )
 
 (define-public (validate-auth (challenge-token (string-ascii 500))) (ok true))
 
 (define-public (transfer (token-id uint) (owner principal) (recipient principal))
-  (if
-    (and 
-      (is-eq (some tx-sender) (nft-get-owner? Layer-NFT token-id))
-      (is-eq owner tx-sender)
-      (is-ok (nft-transfer? Layer-NFT token-id owner recipient))
-    )
-    (ok (map-set token-data {token-id: token-id} (merge (unwrap! (map-get? token-data {token-id: token-id}) (err u1903)) {for-sale: false})))
-    (err u37)
+  (begin 
+    (asserts! (is-eq (some tx-sender) (nft-get-owner? Layer-NFT token-id)) ERR-NOT-AUTHORIZED)
+    (try! (nft-transfer? Layer-NFT token-id owner recipient))
+    (ok (map-set token-data {token-id: token-id} (merge (unwrap! (map-get? token-data {token-id: token-id}) ERR-FAILED-TO-SET-TOKEN-DATA) {for-sale: false})))
   )
 )
 
 (define-read-only (get-all-token-data (token-id uint))
   (ok {
       token-id: token-id,
-      token-metadata: (unwrap! (map-get? token-metadata {token-id: token-id}) (err u3)),
-      token-data: (unwrap! (map-get? token-data {token-id: token-id}) (err u8)),
-      token-royalties: (unwrap! (map-get? token-royalties {token-id: token-id}) (err u4)),
-      token-owner: (unwrap! (nft-get-owner? Layer-NFT token-id) (err u5)),
+      token-metadata: (unwrap! (map-get? token-metadata {token-id: token-id}) ERR-TOKEN-METADATA-NOT-SET),
+      token-data: (unwrap! (map-get? token-data {token-id: token-id}) ERR-TOKEN-ID-NOT-SET),
+      token-royalties: (unwrap! (map-get? token-royalties {token-id: token-id}) ERR-ROYALTIES-NOT-SET),
+      token-owner: (unwrap! (nft-get-owner? Layer-NFT token-id) ERR-GETTING-NFT-OWNER),
     })
 )
 
@@ -219,5 +209,5 @@
   (ok (var-get last-token-id)))
 
 (define-read-only (get-token-uri (token-id uint))
-  (ok (some (unwrap! (map-get? token-metadata { token-id: token-id }) (err u2222))))
+  (ok (some (unwrap! (map-get? token-metadata { token-id: token-id }) ERR-COULD-NOT-GET-TOKEN-URI)))
 )
